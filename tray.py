@@ -3,8 +3,11 @@
 import pystray
 from PIL import Image, ImageDraw, ImageFont
 from typing import Callable
+import threading
 
 from startup import is_startup_enabled, toggle_startup
+from updater import check_for_updates, download_update, install_update
+from version import __version__
 
 
 def create_icon_image(active: bool = True) -> Image.Image:
@@ -68,6 +71,7 @@ class TrayIcon:
         self.on_quit = on_quit
         self.icon = None
         self.startup_enabled = is_startup_enabled()
+        self.checking_update = False
 
     def _create_menu(self) -> pystray.Menu:
         """Crée le menu contextuel."""
@@ -95,6 +99,16 @@ class TrayIcon:
                 self._toggle_startup
             ),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(
+                f"Version {__version__}",
+                None,
+                enabled=False
+            ),
+            pystray.MenuItem(
+                "Vérifier les mises à jour",
+                self._check_update
+            ),
+            pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quitter", self._quit)
         )
 
@@ -109,6 +123,58 @@ class TrayIcon:
         self.startup_enabled = toggle_startup()
         status = "activé" if self.startup_enabled else "désactivé"
         self.notify("Typo", f"Démarrage avec Windows {status}")
+
+    def _check_update(self, icon: pystray.Icon = None, item: pystray.MenuItem = None) -> None:
+        """Vérifie les mises à jour (en thread pour ne pas bloquer l'UI)."""
+        if self.checking_update:
+            return
+
+        def check():
+            self.checking_update = True
+            self.notify("Typo", "Vérification des mises à jour...")
+
+            update_info = check_for_updates()
+
+            if update_info is None:
+                self.notify("Typo", f"Vous utilisez la dernière version (v{__version__})")
+                self.checking_update = False
+                return
+
+            # Proposer le téléchargement
+            self.notify(
+                "Typo - Mise à jour disponible",
+                f"Version {update_info.version} disponible\nTéléchargement en cours..."
+            )
+
+            # Télécharger
+            def progress(percent):
+                if percent % 25 == 0:  # Notifier tous les 25%
+                    self.notify("Typo", f"Téléchargement : {percent}%")
+
+            exe_path = download_update(update_info, progress)
+
+            if exe_path is None:
+                self.notify("Typo - Erreur", "Échec du téléchargement")
+                self.checking_update = False
+                return
+
+            # Installer
+            self.notify("Typo", "Installation de la mise à jour...")
+            success = install_update(exe_path)
+
+            if success:
+                self.notify(
+                    "Typo",
+                    "Mise à jour installée ! L'application va redémarrer..."
+                )
+                # L'application va redémarrer automatiquement
+                self.icon.stop()
+                self.on_quit()
+            else:
+                self.notify("Typo - Erreur", "Échec de l'installation")
+                self.checking_update = False
+
+        threading.Thread(target=check, daemon=True).start()
 
     def _quit(self, icon: pystray.Icon, item: pystray.MenuItem) -> None:
         """Quitte l'application."""

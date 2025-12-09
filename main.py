@@ -163,6 +163,16 @@ class TypoApp:
             on_quit=self.on_quit
         )
 
+        # Vérifier les mises à jour au démarrage (en arrière-plan)
+        def check_updates_on_startup():
+            # Attendre 3 secondes après le démarrage avant de vérifier
+            import time
+            time.sleep(3)
+            if self.tray:
+                self.tray._check_update()
+
+        threading.Thread(target=check_updates_on_startup, daemon=True).start()
+
         # L'icône tray bloque ici
         self.tray.run()
 
