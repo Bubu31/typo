@@ -4,6 +4,8 @@ import pystray
 from PIL import Image, ImageDraw, ImageFont
 from typing import Callable
 
+from startup import is_startup_enabled, toggle_startup
+
 
 def create_icon_image(active: bool = True) -> Image.Image:
     """
@@ -65,6 +67,7 @@ class TrayIcon:
         self.on_toggle = on_toggle
         self.on_quit = on_quit
         self.icon = None
+        self.startup_enabled = is_startup_enabled()
 
     def _create_menu(self) -> pystray.Menu:
         """Crée le menu contextuel."""
@@ -87,6 +90,11 @@ class TrayIcon:
                 )
             ),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(
+                lambda item: "✓ Démarrer avec Windows" if self.startup_enabled else "Démarrer avec Windows",
+                self._toggle_startup
+            ),
+            pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quitter", self._quit)
         )
 
@@ -95,6 +103,12 @@ class TrayIcon:
         self.active = not self.active
         self.icon.icon = create_icon_image(self.active)
         self.on_toggle(self.active)
+
+    def _toggle_startup(self, icon: pystray.Icon, item: pystray.MenuItem) -> None:
+        """Bascule le démarrage automatique avec Windows."""
+        self.startup_enabled = toggle_startup()
+        status = "activé" if self.startup_enabled else "désactivé"
+        self.notify("Typo", f"Démarrage avec Windows {status}")
 
     def _quit(self, icon: pystray.Icon, item: pystray.MenuItem) -> None:
         """Quitte l'application."""
