@@ -3,7 +3,10 @@
 import os
 from anthropic import Anthropic, APIError, APIConnectionError
 
-from config import MODEL, PROMPTS
+from config import MODEL
+import prompt_manager
+import translations
+import settings_manager
 
 
 class APIClientError(Exception):
@@ -27,13 +30,14 @@ def get_client() -> Anthropic:
     return Anthropic(api_key=api_key)
 
 
-def process_text(text: str, action: str) -> str:
+def process_text(text: str, action: str, language: str = None) -> str:
     """
     Traite le texte avec l'API Claude selon l'action demandée.
 
     Args:
         text: Le texte à traiter.
         action: L'action à effectuer ('correct', 'format', 'reformulate', 'professional').
+        language: Code langue (fr, en, es, de). Si None, utilise la langue configurée.
 
     Returns:
         Le texte traité.
@@ -41,10 +45,22 @@ def process_text(text: str, action: str) -> str:
     Raises:
         APIClientError: En cas d'erreur API.
     """
-    if action not in PROMPTS:
+    # Récupérer la langue configurée si non spécifiée
+    if language is None:
+        language = settings_manager.get("language", "fr")
+
+    # Essayer d'abord avec prompt_manager (custom prompts ou overrides)
+    prompt_template = prompt_manager.get_prompt(action)
+
+    # Si pas trouvé, essayer avec translations (prompts par défaut traduits)
+    if prompt_template is None:
+        prompt_template = translations.get_prompt(action, language)
+
+    # Si toujours pas trouvé, erreur
+    if prompt_template is None:
         raise APIClientError(f"Action inconnue : {action}")
 
-    prompt = PROMPTS[action].format(text=text)
+    prompt = prompt_template.format(text=text)
 
     try:
         client = get_client()

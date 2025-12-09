@@ -5,6 +5,8 @@ from tkinter import ttk, messagebox
 from typing import Callable
 
 from config import ACTION_LABELS
+import theme_manager
+import prompt_manager
 
 
 class PreviewPopup:
@@ -31,11 +33,21 @@ class PreviewPopup:
         self.on_accept = on_accept
         self.on_cancel = on_cancel
 
+        # Récupérer le thème actuel
+        self.colors = theme_manager.get_current_theme()
+
         self.root = tk.Tk()
-        self.root.title(f"Typo - {ACTION_LABELS.get(action, action)}")
+        # Utiliser prompt_manager pour le label au cas où custom prompt
+        action_label = prompt_manager.get_action_label(action)
+        if action_label == action and action in ACTION_LABELS:
+            action_label = ACTION_LABELS[action]
+        self.root.title(f"Typo - {action_label}")
         self.root.attributes('-topmost', True)
         self.root.geometry("650x450")
         self.root.minsize(400, 300)
+
+        # Appliquer la couleur de fond
+        self.root.configure(bg=self.colors["bg"])
 
         # Centrer la fenêtre
         self.root.update_idletasks()
@@ -48,26 +60,30 @@ class PreviewPopup:
 
     def _create_widgets(self, original: str, corrected: str) -> None:
         """Crée les widgets de l'interface."""
-        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame = tk.Frame(self.root, bg=self.colors["bg"], padx=10, pady=10)
         main_frame.pack(fill='both', expand=True)
 
         # Section texte original
-        ttk.Label(
+        tk.Label(
             main_frame,
             text="Original :",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors["bg"],
+            fg=self.colors["fg"]
         ).pack(anchor='w')
 
-        original_frame = ttk.Frame(main_frame)
+        original_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         original_frame.pack(fill='x', pady=(5, 10))
 
         original_text = tk.Text(
             original_frame,
             height=5,
             wrap=tk.WORD,
-            bg='#f5f5f5',
+            bg=self.colors["bg_secondary"],
+            fg=self.colors["fg"],
             relief='flat',
-            font=('Segoe UI', 10)
+            font=('Segoe UI', 10),
+            insertbackground=self.colors["text_cursor"]
         )
         original_text.insert('1.0', original)
         original_text.config(state='disabled')
@@ -82,20 +98,25 @@ class PreviewPopup:
         original_text.config(yscrollcommand=original_scroll.set)
 
         # Section texte corrigé
-        ttk.Label(
+        tk.Label(
             main_frame,
             text="Corrigé (modifiable) :",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors["bg"],
+            fg=self.colors["fg"]
         ).pack(anchor='w')
 
-        corrected_frame = ttk.Frame(main_frame)
+        corrected_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         corrected_frame.pack(fill='both', expand=True, pady=(5, 10))
 
         self.corrected_text = tk.Text(
             corrected_frame,
             wrap=tk.WORD,
             relief='flat',
-            font=('Segoe UI', 10)
+            font=('Segoe UI', 10),
+            bg=self.colors["bg"],
+            fg=self.colors["fg"],
+            insertbackground=self.colors["text_cursor"]
         )
         self.corrected_text.insert('1.0', corrected)
         self.corrected_text.pack(side='left', fill='both', expand=True)
@@ -112,19 +133,31 @@ class PreviewPopup:
         self.corrected_text.focus_set()
 
         # Boutons
-        btn_frame = ttk.Frame(main_frame)
+        btn_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         btn_frame.pack(fill='x', pady=(5, 0))
 
-        ttk.Button(
+        tk.Button(
             btn_frame,
             text="Appliquer (Ctrl+Entrée)",
-            command=self._accept
+            command=self._accept,
+            bg=self.colors["button_bg"],
+            fg=self.colors["button_fg"],
+            activebackground=self.colors["button_active_bg"],
+            relief='flat',
+            padx=15,
+            pady=5
         ).pack(side='right', padx=(5, 0))
 
-        ttk.Button(
+        tk.Button(
             btn_frame,
             text="Annuler (Échap)",
-            command=self._cancel
+            command=self._cancel,
+            bg=self.colors["button_bg"],
+            fg=self.colors["button_fg"],
+            activebackground=self.colors["button_active_bg"],
+            relief='flat',
+            padx=15,
+            pady=5
         ).pack(side='right')
 
     def _bind_keys(self) -> None:
@@ -187,12 +220,14 @@ def ask_api_key() -> str | None:
         La clé API saisie, ou None si annulé.
     """
     result = [None]
+    colors = theme_manager.get_current_theme()
 
     root = tk.Tk()
     root.title("Typo - Configuration")
     root.attributes('-topmost', True)
     root.geometry("500x200")
     root.resizable(False, False)
+    root.configure(bg=colors["bg"])
 
     # Centrer la fenêtre
     root.update_idletasks()
@@ -200,30 +235,42 @@ def ask_api_key() -> str | None:
     y = (root.winfo_screenheight() - 200) // 2
     root.geometry(f"+{x}+{y}")
 
-    main_frame = ttk.Frame(root, padding="20")
+    main_frame = tk.Frame(root, bg=colors["bg"], padx=20, pady=20)
     main_frame.pack(fill='both', expand=True)
 
-    ttk.Label(
+    tk.Label(
         main_frame,
         text="Bienvenue dans Typo !",
-        font=('Segoe UI', 12, 'bold')
+        font=('Segoe UI', 12, 'bold'),
+        bg=colors["bg"],
+        fg=colors["fg"]
     ).pack(anchor='w')
 
-    ttk.Label(
+    tk.Label(
         main_frame,
         text="Entrez votre clé API Anthropic pour commencer :",
-        font=('Segoe UI', 10)
+        font=('Segoe UI', 10),
+        bg=colors["bg"],
+        fg=colors["fg"]
     ).pack(anchor='w', pady=(10, 5))
 
-    entry = ttk.Entry(main_frame, width=60, font=('Segoe UI', 10))
+    entry = tk.Entry(
+        main_frame,
+        width=60,
+        font=('Segoe UI', 10),
+        bg=colors["bg"],
+        fg=colors["fg"],
+        insertbackground=colors["text_cursor"]
+    )
     entry.pack(fill='x', pady=(0, 5))
     entry.focus_set()
 
-    ttk.Label(
+    tk.Label(
         main_frame,
         text="(Obtenez votre clé sur console.anthropic.com)",
         font=('Segoe UI', 8),
-        foreground='gray'
+        bg=colors["bg"],
+        fg=colors["fg_secondary"]
     ).pack(anchor='w')
 
     def on_save():
@@ -235,11 +282,32 @@ def ask_api_key() -> str | None:
     def on_cancel():
         root.destroy()
 
-    btn_frame = ttk.Frame(main_frame)
+    btn_frame = tk.Frame(main_frame, bg=colors["bg"])
     btn_frame.pack(fill='x', pady=(20, 0))
 
-    ttk.Button(btn_frame, text="Enregistrer", command=on_save).pack(side='right', padx=(5, 0))
-    ttk.Button(btn_frame, text="Annuler", command=on_cancel).pack(side='right')
+    tk.Button(
+        btn_frame,
+        text="Enregistrer",
+        command=on_save,
+        bg=colors["button_bg"],
+        fg=colors["button_fg"],
+        activebackground=colors["button_active_bg"],
+        relief='flat',
+        padx=15,
+        pady=5
+    ).pack(side='right', padx=(5, 0))
+
+    tk.Button(
+        btn_frame,
+        text="Annuler",
+        command=on_cancel,
+        bg=colors["button_bg"],
+        fg=colors["button_fg"],
+        activebackground=colors["button_active_bg"],
+        relief='flat',
+        padx=15,
+        pady=5
+    ).pack(side='right')
 
     root.bind('<Return>', lambda e: on_save())
     root.bind('<Escape>', lambda e: on_cancel())
