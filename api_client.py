@@ -7,6 +7,7 @@ from config import MODEL
 import prompt_manager
 import translations
 import settings_manager
+import usage_tracker
 
 
 class APIClientError(Exception):
@@ -69,6 +70,12 @@ def process_text(text: str, action: str, language: str = None) -> str:
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
+
+        # Tracker l'utilisation de l'API
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        usage_tracker.track_request(input_tokens, output_tokens)
+
         return response.content[0].text
 
     except APIConnectionError as e:

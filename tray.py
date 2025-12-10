@@ -13,6 +13,7 @@ import settings_manager
 import hotkey_manager
 import snippet_manager
 import translations
+import usage_tracker
 
 
 def create_icon_image(active: bool = True) -> Image.Image:
@@ -149,6 +150,12 @@ class TrayIcon:
                 pystray.Menu(
                     pystray.MenuItem("Personnaliser les raccourcis...", self._open_hotkeys_manager),
                     pystray.MenuItem("Gérer les prompts...", self._open_prompts_manager),
+                    pystray.Menu.SEPARATOR,
+                    pystray.MenuItem(
+                        lambda item: f"Utilisation ce mois : {usage_tracker.format_usage_display()}",
+                        None,
+                        enabled=False
+                    ),
                     pystray.Menu.SEPARATOR,
                     pystray.MenuItem(
                         lambda item: "✓ Démarrer avec Windows" if self.startup_enabled else "  Démarrer avec Windows",
