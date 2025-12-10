@@ -13,7 +13,15 @@ Ne change pas le style ni la formulation. Retourne uniquement le texte corrigé,
 Texte : {text}""",
 
             "format": """Corrige les fautes d'orthographe et de grammaire, et améliore la ponctuation et la mise en forme de ce texte.
-Garde le même sens et le même ton. Retourne uniquement le texte corrigé, sans explication.
+
+IMPORTANT : Ajoute avec parcimonie (2-3 maximum) des emojis qui correspondent au contexte du message. Les emojis doivent enrichir le message sans le surcharger.
+
+📏 RÈGLES :
+- Garde le même sens et le même ton
+- Ajoute des emojis pertinents et modérés (pas plus de 2-3)
+- Place les emojis naturellement dans le texte
+- Ne change pas le style du message
+- Retourne uniquement le texte corrigé, sans explication
 
 Texte : {text}""",
 
@@ -90,7 +98,15 @@ Do not change the style or wording. Return only the corrected text, without expl
 Text: {text}""",
 
             "format": """Correct spelling and grammar errors, and improve punctuation and formatting of this text.
-Keep the same meaning and tone. Return only the corrected text, without explanation.
+
+IMPORTANT: Add sparingly (2-3 maximum) emojis that match the message context. Emojis should enrich the message without overloading it.
+
+📏 RULES:
+- Keep the same meaning and tone
+- Add relevant and moderate emojis (no more than 2-3)
+- Place emojis naturally in the text
+- Do not change the message style
+- Return only the corrected text, without explanation
 
 Text: {text}""",
 
@@ -167,7 +183,15 @@ No cambies el estilo ni la redacción. Devuelve solo el texto corregido, sin exp
 Texto: {text}""",
 
             "format": """Corrige los errores de ortografía y gramática, y mejora la puntuación y el formato de este texto.
-Mantén el mismo significado y tono. Devuelve solo el texto corregido, sin explicación.
+
+IMPORTANTE: Añade con moderación (2-3 máximo) emojis que correspondan al contexto del mensaje. Los emojis deben enriquecer el mensaje sin sobrecargarlo.
+
+📏 REGLAS:
+- Mantén el mismo significado y tono
+- Añade emojis relevantes y moderados (no más de 2-3)
+- Coloca los emojis naturalmente en el texto
+- No cambies el estilo del mensaje
+- Devuelve solo el texto corregido, sin explicación
 
 Texto: {text}""",
 
@@ -244,7 +268,15 @@ Texto: {text}"""
 Text: {text}""",
 
             "format": """Korrigiere Rechtschreib- und Grammatikfehler und verbessere Zeichensetzung und Formatierung dieses Textes.
-Behalte dieselbe Bedeutung und denselben Ton bei. Gib nur den korrigierten Text zurück, ohne Erklärung.
+
+WICHTIG: Füge sparsam (maximal 2-3) Emojis hinzu, die zum Kontext der Nachricht passen. Emojis sollten die Nachricht bereichern, ohne sie zu überladen.
+
+📏 REGELN:
+- Behalte dieselbe Bedeutung und denselben Ton bei
+- Füge relevante und moderate Emojis hinzu (nicht mehr als 2-3)
+- Platziere Emojis natürlich im Text
+- Ändere nicht den Stil der Nachricht
+- Gib nur den korrigierten Text zurück, ohne Erklärung
 
 Text: {text}""",
 

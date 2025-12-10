@@ -72,7 +72,15 @@ Ne change pas le style ni la formulation. Retourne uniquement le texte corrigé,
 Texte : {text}""",
 
     'format': """Corrige les fautes d'orthographe et de grammaire, et améliore la ponctuation et la mise en forme de ce texte.
-Garde le même sens et le même ton. Retourne uniquement le texte corrigé, sans explication.
+
+IMPORTANT : Ajoute avec parcimonie (2-3 maximum) des emojis qui correspondent au contexte du message. Les emojis doivent enrichir le message sans le surcharger.
+
+📏 RÈGLES :
+- Garde le même sens et le même ton
+- Ajoute des emojis pertinents et modérés (pas plus de 2-3)
+- Place les emojis naturellement dans le texte
+- Ne change pas le style du message
+- Retourne uniquement le texte corrigé, sans explication
 
 Texte : {text}""",
 
