@@ -201,7 +201,7 @@ class HotkeysManagerWindow:
         import settings_manager
         settings_manager.set("hotkeys", self.hotkeys)
 
-        messagebox.showinfo("Succès", "Raccourcis sauvegardés. Redémarrez l'application pour appliquer les changements.")
+        messagebox.showinfo("Succès", "Raccourcis sauvegardés.\n\nUtilisez 'Recharger la config' dans le menu tray pour appliquer immédiatement.")
         self.root.destroy()
 
     def _cancel(self):

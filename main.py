@@ -40,8 +40,39 @@ class TypoApp:
                 self.hotkey_vk_actions[vk] = action
 
     def reload_settings(self) -> None:
-        """Recharge les paramètres (appelé après modification des settings)."""
-        settings_manager.reload_config()
+        """Recharge les paramètres depuis les fichiers JSON."""
+        # Recharger config.json
+        try:
+            new_config = settings_manager.reload_config()
+        except Exception as e:
+            raise Exception(f"Erreur lecture config.json: {str(e)}")
+
+        # Valider hotkeys (détecter conflits)
+        all_hotkeys = hotkey_manager.get_all_hotkeys()
+        conflict_pairs = []
+        checked = set()
+
+        for action, hotkey_config in all_hotkeys.items():
+            if action in checked:
+                continue
+
+            conflicts = hotkey_manager.check_conflicts(hotkey_config, exclude_action=action)
+            if conflicts:
+                for other in conflicts:
+                    if other not in checked:
+                        conflict_pairs.append((action, other))
+                        checked.add(action)
+                        checked.add(other)
+
+        # Avertir des conflits (mais continuer)
+        if conflict_pairs and self.tray:
+            conflict_text = ", ".join([f"{a1}/{a2}" for a1, a2 in conflict_pairs])
+            self.tray.notify(
+                "Typo - Avertissement",
+                f"Conflits de raccourcis : {conflict_text}"
+            )
+
+        # Reconstruire la map hotkeys
         self._build_hotkey_map()
 
     def generate_help_message(self) -> str:
@@ -231,7 +262,8 @@ class TypoApp:
         # Créer et lancer l'icône tray
         self.tray = TrayIcon(
             on_toggle=self.on_toggle,
-            on_quit=self.on_quit
+            on_quit=self.on_quit,
+            on_reload=self.reload_settings
         )
 
         # Vérifier les mises à jour au démarrage (en arrière-plan)

@@ -64,7 +64,8 @@ class TrayIcon:
     def __init__(
         self,
         on_toggle: Callable[[bool], None],
-        on_quit: Callable[[], None]
+        on_quit: Callable[[], None],
+        on_reload: Callable[[], None] = None
     ):
         """
         Initialise l'icône tray.
@@ -72,10 +73,12 @@ class TrayIcon:
         Args:
             on_toggle: Callback appelé quand l'utilisateur active/désactive.
             on_quit: Callback appelé quand l'utilisateur quitte.
+            on_reload: Callback appelé quand l'utilisateur recharge la config.
         """
         self.active = True
         self.on_toggle = on_toggle
         self.on_quit = on_quit
+        self.on_reload = on_reload
         self.icon = None
         self.startup_enabled = is_startup_enabled()
         self.checking_update = False
@@ -148,6 +151,8 @@ class TrayIcon:
             pystray.MenuItem(
                 "Paramètres",
                 pystray.Menu(
+                    pystray.MenuItem("Recharger la config", self._reload_config),
+                    pystray.Menu.SEPARATOR,
                     pystray.MenuItem("Personnaliser les raccourcis...", self._open_hotkeys_manager),
                     pystray.MenuItem("Gérer les prompts...", self._open_prompts_manager),
                     pystray.Menu.SEPARATOR,
@@ -187,6 +192,15 @@ class TrayIcon:
         settings_manager.set("language", language)
         lang_name = dict(translations.get_supported_languages()).get(language, language)
         self.notify("Typo", f"Langue changée : {lang_name}")
+
+    def _reload_config(self, icon: pystray.Icon = None, item: pystray.MenuItem = None) -> None:
+        """Recharge la configuration."""
+        if self.on_reload:
+            try:
+                self.on_reload()
+                self.notify("Typo", "Configuration rechargée avec succès")
+            except Exception as e:
+                self.notify("Typo - Erreur", f"Échec du rechargement : {str(e)}")
 
     def _paste_snippet(self, snippet: dict) -> None:
         """Colle un snippet depuis le menu."""

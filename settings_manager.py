@@ -184,10 +184,38 @@ def reload_config() -> Dict[str, Any]:
 
     Returns:
         Dict de configuration rechargée.
+
+    Raises:
+        json.JSONDecodeError: Si le fichier JSON est invalide.
+        IOError: Si le fichier ne peut pas être lu.
     """
     global _config_cache
-    _config_cache = load_config()
-    return _config_cache
+    config_path = get_config_path()
+
+    if not config_path.exists():
+        # Créer avec defaults si n'existe pas
+        _config_cache = load_config()
+        return _config_cache
+
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+
+        # Merger avec defaults
+        merged_config = DEFAULT_CONFIG.copy()
+        merged_config.update(config)
+
+        if "hotkeys" in config:
+            default_hotkeys = DEFAULT_CONFIG["hotkeys"].copy()
+            default_hotkeys.update(config["hotkeys"])
+            merged_config["hotkeys"] = default_hotkeys
+
+        _config_cache = merged_config
+        return _config_cache
+
+    except (json.JSONDecodeError, IOError) as e:
+        # Propager l'erreur pour notification utilisateur
+        raise
 
 
 def get(key: str, default: Any = None) -> Any:

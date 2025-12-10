@@ -14,7 +14,32 @@ PRICE_OUTPUT_PER_MILLION = 1.25  # $1.25 per 1M output tokens
 
 def get_usage_file_path() -> Path:
     """Retourne le chemin du fichier de suivi d'utilisation."""
-    return get_app_dir() / 'usage_stats.json'
+    from settings_manager import get_config_dir
+    return get_config_dir() / 'usage_stats.json'
+
+
+def migrate_usage_file_if_needed() -> None:
+    """Migre usage_stats.json de l'exe dir vers AppData si nécessaire."""
+    from config import get_app_dir
+    from settings_manager import ensure_config_dir
+
+    old_path = get_app_dir() / 'usage_stats.json'
+    new_path = get_usage_file_path()
+
+    # Si le nouveau fichier existe déjà, rien à faire
+    if new_path.exists():
+        return
+
+    # Si l'ancien fichier existe, le déplacer
+    if old_path.exists():
+        try:
+            ensure_config_dir()
+            import shutil
+            shutil.copy2(old_path, new_path)  # Copier
+            old_path.unlink()  # Supprimer ancien
+        except Exception as e:
+            print(f"Avertissement: impossible de migrer usage_stats.json: {e}")
+            # Continuer - nouveau fichier sera créé
 
 
 def get_current_month() -> str:
@@ -29,6 +54,9 @@ def load_usage_stats() -> Dict[str, Any]:
     Returns:
         Dictionnaire contenant les stats. Réinitialise si nouveau mois.
     """
+    # Migrer le fichier si nécessaire (première fois)
+    migrate_usage_file_if_needed()
+
     usage_file = get_usage_file_path()
     current_month = get_current_month()
 
