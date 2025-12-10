@@ -207,7 +207,7 @@ class TrayIcon:
                     paste_text(content)
 
             window = SnippetSearchWindow(on_select=on_select)
-            threading.Thread(target=window.show, daemon=True).start()
+            window.show()
         except ImportError:
             self.notify("Typo", "Fonctionnalité pas encore disponible")
 
@@ -216,7 +216,7 @@ class TrayIcon:
         try:
             from ui_snippets import SnippetsManagerWindow
             window = SnippetsManagerWindow()
-            threading.Thread(target=window.show, daemon=True).start()
+            window.show()
         except ImportError:
             self.notify("Typo", "Fonctionnalité pas encore disponible")
 
@@ -225,7 +225,7 @@ class TrayIcon:
         try:
             from ui_prompts import PromptsManagerWindow
             window = PromptsManagerWindow()
-            threading.Thread(target=window.show, daemon=True).start()
+            window.show()
         except ImportError:
             self.notify("Typo", "Fonctionnalité pas encore disponible")
 
@@ -234,7 +234,7 @@ class TrayIcon:
         try:
             from ui_hotkeys import HotkeysManagerWindow
             window = HotkeysManagerWindow()
-            threading.Thread(target=window.show, daemon=True).start()
+            window.show()
         except ImportError:
             self.notify("Typo", "Fonctionnalité pas encore disponible")
 
