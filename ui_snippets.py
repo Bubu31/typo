@@ -232,15 +232,13 @@ class SnippetsManagerWindow:
         for snippet in self.snippets:
             label = snippet.get('label', 'Sans nom')
             slot = snippet.get('hotkey_slot')
-            hotkey = f"Ctrl+Alt+{slot}" if slot else "(aucun)"
+            hotkey = f"Ctrl+Shift+{slot}" if slot else "(aucun)"
 
             self.tree.insert('', 'end', values=(label, hotkey, ''), tags=(snippet['id'],))
 
     def _new_snippet(self):
         """Crée un nouveau snippet."""
-        dialog = SnippetEditDialog(self.root, None)
-        if dialog.result:
-            self._load_snippets()
+        SnippetEditDialog(self.root, None, on_save=self._load_snippets)
 
     def _edit_snippet(self):
         """Édite le snippet sélectionné."""
@@ -253,9 +251,7 @@ class SnippetsManagerWindow:
         snippet = snippet_manager.get_snippet(snippet_id)
 
         if snippet:
-            dialog = SnippetEditDialog(self.root, snippet)
-            if dialog.result:
-                self._load_snippets()
+            SnippetEditDialog(self.root, snippet, on_save=self._load_snippets)
 
     def _delete_snippet(self):
         """Supprime le snippet sélectionné."""
@@ -282,16 +278,18 @@ class SnippetsManagerWindow:
 class SnippetEditDialog:
     """Dialog d'édition de snippet."""
 
-    def __init__(self, parent, snippet: Optional[dict]):
+    def __init__(self, parent, snippet: Optional[dict], on_save: Optional[Callable[[], None]] = None):
         """
         Initialise le dialog.
 
         Args:
             parent: Fenêtre parente.
             snippet: Snippet à éditer, ou None pour nouveau.
+            on_save: Callback appelé après sauvegarde réussie.
         """
         self.snippet = snippet
         self.result = False
+        self.on_save = on_save
         self.colors = theme_manager.get_current_theme()
 
         self.dialog = tk.Toplevel(parent)
@@ -300,6 +298,7 @@ class SnippetEditDialog:
         self.dialog.configure(bg=self.colors["bg"])
         self.dialog.transient(parent)
         self.dialog.grab_set()
+        self.dialog.focus_set()
 
         # Centrer
         self.dialog.update_idletasks()
@@ -308,9 +307,6 @@ class SnippetEditDialog:
         self.dialog.geometry(f"+{x}+{y}")
 
         self._create_widgets()
-
-        # Attendre que le dialog soit fermé (rendre vraiment modal)
-        parent.wait_window(self.dialog)
 
     def _create_widgets(self):
         """Crée les widgets."""
@@ -377,11 +373,11 @@ class SnippetEditDialog:
         ).pack(side='left', padx=(0, 5))
 
         self.slot_var = tk.StringVar(value="Aucun")
-        slot_values = ["Aucun"] + [f"Ctrl+Alt+{i} (slot {i})" for i in range(1, 10)]
+        slot_values = ["Aucun"] + [f"Ctrl+Shift+{i} (slot {i})" for i in range(1, 10)]
 
         if self.snippet and self.snippet.get('hotkey_slot'):
             slot = self.snippet['hotkey_slot']
-            self.slot_var.set(f"Ctrl+Alt+{slot} (slot {slot})")
+            self.slot_var.set(f"Ctrl+Shift+{slot} (slot {slot})")
 
         slot_menu = ttk.Combobox(
             hotkey_frame,
@@ -442,3 +438,7 @@ class SnippetEditDialog:
 
         self.result = True
         self.dialog.destroy()
+
+        # Appeler le callback si défini
+        if self.on_save:
+            self.on_save()

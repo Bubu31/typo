@@ -368,9 +368,7 @@ class PromptsManagerWindow:
 
     def _new_prompt(self):
         """Crée un nouveau prompt custom."""
-        dialog = NewPromptDialog(self.root)
-        if dialog.result:
-            self._load_prompts()
+        NewPromptDialog(self.root, on_save=self._load_prompts)
 
     def show(self):
         """Affiche la fenêtre."""
@@ -380,9 +378,10 @@ class PromptsManagerWindow:
 class NewPromptDialog:
     """Dialog pour créer un nouveau prompt custom."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, on_save=None):
         """Initialise le dialog."""
         self.result = False
+        self.on_save = on_save
         self.colors = theme_manager.get_current_theme()
 
         self.dialog = tk.Toplevel(parent)
@@ -391,6 +390,7 @@ class NewPromptDialog:
         self.dialog.configure(bg=self.colors["bg"])
         self.dialog.transient(parent)
         self.dialog.grab_set()
+        self.dialog.focus_set()
 
         # Centrer
         self.dialog.update_idletasks()
@@ -399,9 +399,6 @@ class NewPromptDialog:
         self.dialog.geometry(f"+{x}+{y}")
 
         self._create_widgets()
-
-        # Attendre que le dialog soit fermé (rendre vraiment modal)
-        parent.wait_window(self.dialog)
 
     def _create_widgets(self):
         """Crée les widgets."""
@@ -483,3 +480,7 @@ class NewPromptDialog:
 
         self.result = True
         self.dialog.destroy()
+
+        # Appeler le callback si défini
+        if self.on_save:
+            self.on_save()

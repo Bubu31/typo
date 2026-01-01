@@ -26,18 +26,30 @@ class TypoApp:
         self.hotkey_listener = None
         self.tray = None
         self.pressed_keys = set()
-        self.hotkey_vk_actions = {}  # Mapping VK code -> action
+        self.hotkey_vk_actions = {}  # Mapping VK code -> action (Ctrl+Alt)
+        self.snippet_vk_actions = {}  # Mapping VK code -> action (Ctrl+Shift) pour snippets
         self._build_hotkey_map()
 
     def _build_hotkey_map(self) -> None:
         """Construit le mapping VK code -> action depuis la configuration."""
         self.hotkey_vk_actions = {}
+        self.snippet_vk_actions = {}
         all_hotkeys = hotkey_manager.get_all_hotkeys()
 
         for action, hotkey_config in all_hotkeys.items():
             vk = hotkey_manager.parse_hotkey(hotkey_config)
             if vk:
                 self.hotkey_vk_actions[vk] = action
+
+        # Ajouter les hotkeys pour les snippets (Ctrl+Shift+1 à 9)
+        # VK codes: rangée supérieure 49-57, numpad 97-105
+        for slot in range(1, 10):
+            # Rangée supérieure (1-9 = VK 49-57)
+            vk_top = 48 + slot
+            self.snippet_vk_actions[vk_top] = f"snippet_{slot}"
+            # Numpad (1-9 = VK 97-105)
+            vk_numpad = 96 + slot
+            self.snippet_vk_actions[vk_numpad] = f"snippet_{slot}"
 
     def reload_settings(self) -> None:
         """Recharge les paramètres depuis les fichiers JSON."""
@@ -214,18 +226,27 @@ class TypoApp:
         self.pressed_keys.discard(key)
 
     def _check_hotkey(self, key) -> None:
-        """Vérifie si un raccourci Ctrl+Alt+X est pressé."""
-        # Vérifier si Ctrl et Alt sont pressés
+        """Vérifie si un raccourci est pressé."""
+        # Vérifier les modificateurs
         ctrl_pressed = Key.ctrl_l in self.pressed_keys or Key.ctrl_r in self.pressed_keys
         alt_pressed = Key.alt_l in self.pressed_keys or Key.alt_r in self.pressed_keys or Key.alt_gr in self.pressed_keys
-
-        if not (ctrl_pressed and alt_pressed):
-            return
+        shift_pressed = Key.shift_l in self.pressed_keys or Key.shift_r in self.pressed_keys or Key.shift in self.pressed_keys
 
         # Récupérer le virtual key code de la touche
         vk = None
         if isinstance(key, KeyCode):
             vk = getattr(key, 'vk', None)
+
+        # Vérifier Ctrl+Shift pour les snippets (1-9)
+        if ctrl_pressed and shift_pressed and not alt_pressed and vk:
+            if vk in self.snippet_vk_actions:
+                action = self.snippet_vk_actions[vk]
+                threading.Thread(target=self.on_hotkey, args=(action,), daemon=True).start()
+                return
+
+        # Vérifier Ctrl+Alt pour les autres actions
+        if not (ctrl_pressed and alt_pressed):
+            return
 
         if vk and vk in self.hotkey_vk_actions:
             action = self.hotkey_vk_actions[vk]

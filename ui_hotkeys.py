@@ -170,11 +170,12 @@ class HotkeysManagerWindow:
         action = item['tags'][0]
         current_hotkey = self.hotkeys[action]
 
-        dialog = HotkeyEditDialog(self.root, action, current_hotkey)
-        if dialog.result:
-            self.hotkeys[action] = dialog.result
+        def on_hotkey_save(new_hotkey):
+            self.hotkeys[action] = new_hotkey
             self.modified = True
             self._load_hotkeys()
+
+        HotkeyEditDialog(self.root, action, current_hotkey, on_save=on_hotkey_save)
 
     def _reset_all(self):
         """Réinitialise tous les raccourcis."""
@@ -220,10 +221,11 @@ class HotkeysManagerWindow:
 class HotkeyEditDialog:
     """Dialog de capture de raccourci."""
 
-    def __init__(self, parent, action: str, current_hotkey: dict):
+    def __init__(self, parent, action: str, current_hotkey: dict, on_save=None):
         """Initialise le dialog."""
         self.action = action
         self.result = None
+        self.on_save = on_save
         self.colors = theme_manager.get_current_theme()
         self.captured_hotkey = current_hotkey.copy()
 
@@ -233,6 +235,7 @@ class HotkeyEditDialog:
         self.dialog.configure(bg=self.colors["bg"])
         self.dialog.transient(parent)
         self.dialog.grab_set()
+        self.dialog.focus_set()
 
         # Centrer
         self.dialog.update_idletasks()
@@ -241,9 +244,6 @@ class HotkeyEditDialog:
         self.dialog.geometry(f"+{x}+{y}")
 
         self._create_widgets()
-
-        # Attendre que le dialog soit fermé (rendre vraiment modal)
-        parent.wait_window(self.dialog)
 
     def _create_widgets(self):
         """Crée les widgets."""
@@ -370,3 +370,7 @@ class HotkeyEditDialog:
 
         self.result = self.captured_hotkey
         self.dialog.destroy()
+
+        # Appeler le callback si défini
+        if self.on_save:
+            self.on_save(self.result)

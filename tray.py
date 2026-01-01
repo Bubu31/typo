@@ -107,7 +107,7 @@ class TrayIcon:
             if slot in snippets_by_hotkey:
                 snippet = snippets_by_hotkey[slot]
                 label = snippet.get('label', f'Snippet {slot}')
-                shortcut_items_text = f"Ctrl+Alt+{slot}"
+                shortcut_items_text = f"Ctrl+Shift+{slot}"
                 snippet_items.append(
                     pystray.MenuItem(
                         f"{slot}. {label} ({shortcut_items_text})",
