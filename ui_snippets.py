@@ -309,6 +309,9 @@ class SnippetEditDialog:
 
         self._create_widgets()
 
+        # Attendre que le dialog soit fermé (rendre vraiment modal)
+        parent.wait_window(self.dialog)
+
     def _create_widgets(self):
         """Crée les widgets."""
         main_frame = tk.Frame(self.dialog, bg=self.colors["bg"], padx=20, pady=20)
